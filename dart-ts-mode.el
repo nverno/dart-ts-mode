@@ -563,6 +563,8 @@ Return nil if there is no name or NODE."
 
     (treesit-major-mode-setup)))
 
+(derived-mode-add-parents 'dart-ts-mode '(dart-mode))
+
 (if (treesit-ready-p 'dart)
     (add-to-list 'auto-mode-alist '("\\.dart\\'" . dart-ts-mode)))
 
