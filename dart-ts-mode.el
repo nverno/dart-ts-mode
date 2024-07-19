@@ -186,14 +186,14 @@ PARENT is always optional_formal_parameters."
 (defvar dart-ts-mode--keywords
   '("abstract" "as" "async" "async*" "await" "base" "catch" "class" "deferred"
     "default" "dynamic" "else" "enum" "extends" "export" "external" "extension"
-    "factory" "final" "finally" "for" "get" "hide" "if" "import" "implements" "in" "interface"
-    "is" "mixin" "new" "on" "return" "required" "sealed" "show" "static" "super" "switch" "sync*"
-    "this" "throw" "try" "typedef" "while" "when" "with" "yield")
+    "factory" "final" "finally" "for" "get" "hide" "if" "import" "implements"
+    "in" "interface" "is" "mixin" "new" "on" "return" "required" "sealed" "show"
+    "static" "super" "switch" "sync*" "this" "throw" "try" "typedef" "while"
+    "when" "with" "yield")
   "Dart keywords for tree-sitter font-locking.")
 
 (defvar dart-ts-mode--builtins
-  '("covariant" "Function" "get" "late" "library" "operator" "part"
-    "set")
+  '("covariant" "Function" "get" "late" "library" "operator" "part" "set")
   "Dart builtins for tree-sitter font locking.")
 
 (defvar dart-ts-mode--operators
