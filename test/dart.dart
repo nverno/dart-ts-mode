@@ -1,3 +1,9 @@
+part 'hello.dart';
+
+part of 'hello.dart';
+// library myLibrary;
+// library myLibrary.a.cool.library;
+
 get a => "";
 get a => "\"";
 get a => "This' is a string $mystring";
@@ -54,17 +60,9 @@ void main() {
   await Future.delayed(10.milliseconds, () {});
 }
 
-part 'hello.dart';
-
-part of 'hello.dart';
-
 extension Hello on String {
   String get hello => 'hello';
 }
-
-library myLibrary;
-
-library myLibrary.a.cool.library;
 
 @freezed
 abstract class MyDataClass implements _$MyDataClass {
