@@ -1,16 +1,16 @@
+import 'package:dektor/catalog.dart';
+
+import 'package:dektor/catalog.dart';
+
+import 'package:dektor/catalog.dart';
+
+import 'package:dektor/catalog.dart';
+
 class A {
   int b() {
     int c = 5;
   }
 }
-
-import 'package:dektor/catalog.dart';
-
-import 'package:dektor/catalog.dart';
-
-import 'package:dektor/catalog.dart';
-
-import 'package:dektor/catalog.dart';
 
 class Point {
 }
@@ -90,9 +90,8 @@ typedef Future<String> Handler(String method, Map<String, String> parameters);
 typedef MyFunction<T> = T Function();
 typedef DismissMethod = Future<void> Function(WidgetTester tester, Finder finder, {@required AxisDirection gestureDirection});
 
-#! /usr/bin/env dshell
-
-import 'package:dshell/dshell.dart';
+// #! /usr/bin/env dshell
+// import 'package:dshell/dshell.dart';
 
 List<String> animations = ['1', '2', '3', '4', 'Default'];
 final String assetFile = "assets/myasset.flr";

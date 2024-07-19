@@ -44,8 +44,6 @@ class CatalogThumbnailUI extends StatelessWidget {
   }
 }
 
-import 'package:flutter/material.dart';
-
 class AWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
