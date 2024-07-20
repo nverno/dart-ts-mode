@@ -84,6 +84,7 @@
      ((parent-is "set_or_map_literal") parent-bol dart-ts-mode-indent-offset)
      ((parent-is "return_statement") parent-bol dart-ts-mode-indent-offset)
      ((parent-is "arguments") dart-ts-mode--arguments-indent-rule 0)
+     ((parent-is "expression_statement") parent-bol dart-ts-mode-indent-offset)
      ((n-p-gp nil "block" "function_body") dart-ts-mode--function-body-indent-rule dart-ts-mode-indent-offset)
      ((n-p-gp nil "block" "function_expression_body") dart-ts-mode--function-expression-body-indent-rule dart-ts-mode-indent-offset)
      ((n-p-gp nil "block" "if_statement") dart-ts-mode--if-statement-indent-rule dart-ts-mode-indent-offset)
@@ -179,25 +180,29 @@ If there is no match, it returns the start position of ggp."
 (defun dart-ts-mode--optional-formal-parameters-indent-rule (_node parent &rest _)
   "Return indentation of children of optional_formal_parameters.
 PARENT is always optional_formal_parameters."
-  (if-let ((formal-sib (treesit-node-prev-sibling parent "formal_parameter")))
+  (if-let* ((formal-sib (treesit-node-prev-sibling parent "formal_parameter")))
       (treesit-node-start formal-sib)
     (+ (dart-ts-mode--node-bol parent) dart-ts-mode-indent-offset)))
 
 (defvar dart-ts-mode--keywords
-  '("abstract" "as" "async" "async*" "await" "base" "catch" "class" "deferred"
-    "default" "dynamic" "else" "enum" "extends" "export" "external" "extension"
-    "factory" "final" "finally" "for" "get" "hide" "if" "import" "implements"
-    "in" "interface" "is" "mixin" "new" "on" "return" "required" "sealed" "show"
-    "static" "super" "switch" "sync*" "this" "throw" "try" "typedef" "while"
-    "when" "with" "yield")
+  '("as" "async" "async*" "await" "catch" "class" "continue" "deferred"
+    "default" "else" "enum" "extends" "export" "extension" "factory" "finally"
+    "for" "get" "hide" "if" "import" "implements" "in" "interface" "is" "mixin"
+    "new" "on" "return" "required" "show" "super" "switch" "sync*" "this"
+    "throw" "try" "typedef" "while" "when" "with" "yield"
+    ;; modifiers
+    "abstract" "covariant" "dynamic" "external" "static" "final" "base"
+    "sealed")
   "Dart keywords for tree-sitter font-locking.")
 
 (defvar dart-ts-mode--builtins
-  '("covariant" "Function" "get" "late" "library" "operator" "part" "set")
+  '("abstract" "as" "covariant" "deferred" "dynamic" "export" "external"
+    "factory" "Function" "get" "implements" "import" "interface" "late"
+    "library" "operator" "mixin" "part" "set" "static" "typedef")
   "Dart builtins for tree-sitter font locking.")
 
 (defvar dart-ts-mode--operators
-  '("=>" ".." "..." "?.." "?" "??"
+  '("=>" ".." "..." "?.." "?." "?" "??"
     "|" "^" "&"
     "=" "+=" "-=" "*=" "/=" "%=" "~/=" "<<=" ">>=" ">>>=" "&=" "^=" "|=" "??=" )
   "Dart operators for tree-sitter font-locking.")
@@ -236,7 +241,7 @@ definition names.")
    :language 'dart
    :feature 'comment
    '((comment) @font-lock-comment-face
-     (documentation_comment) @font-lock-comment-face)
+     (documentation_comment) @font-lock-doc-face)
 
    :language 'dart
    :feature 'annotation
@@ -246,47 +251,56 @@ definition names.")
 
    :language 'dart
    :feature 'keyword
-   `([,@dart-ts-mode--keywords] @font-lock-keyword-face
-     [(super) (this)] @font-lock-keyword-face
-     [(break_builtin) (const_builtin) (final_builtin) (case_builtin)]
+   `([,@dart-ts-mode--keywords
+      (inferred_type)
+      (super)
+      (this)
+      (break_builtin)
+      (const_builtin)
+      (final_builtin)
+      (case_builtin)]
      @font-lock-keyword-face
 
      ((identifier) @font-lock-keyword-face
       (:match "^rethrow" @font-lock-keyword-face))
-     ;; (for_statement "for" @font-lock-keyword-face)
-     ;; (finally_clause "finally" @font-lock-keyword-face)
      (part_of_directive (part_of_builtin) @font-lock-builtin-face)
-     (function_type "Function" @font-lock-builtin-face)
-     ;; (throw_expression "throw" @font-lock-keyword-face)
-     ;; (while_statement "while" @font-lock-keyword-face)
-     (yield_each_statement
-      "yield" @font-lock-keyword-face
-      "*" @font-lock-keyword-face))
-
-   :language 'dart
-   :feature 'builtin
-   `([,@dart-ts-mode--builtins] @font-lock-builtin-face
-     [(assert_builtin)] @font-lock-warning-face
-
-     (expression_statement
-      ((identifier) @font-lock-builtin-face
-       (:match ,(rx bol "print" eol) @font-lock-builtin-face))
-      (selector)))
+     (yield_each_statement ["yield" "*"] @font-lock-keyword-face))
 
    :language 'dart
    :feature 'definition
    '((class_definition
       name: (identifier) @font-lock-type-face)
-     (formal_parameter
+     (function_signature
+      name: (identifier) @font-lock-function-name-face)
+     (redirecting_factory_constructor_signature
+      (identifier) @font-lock-function-name-face)
+     (factory_constructor_signature (identifier) @font-lock-function-name-face)
+     (constant_constructor_signature (identifier) @font-lock-function-name-face)
+     (constructor_signature
+      name: (identifier) @font-lock-function-name-face)
+     (getter_signature
+      name: (identifier) @font-lock-function-name-face)
+     (setter_signature
+      name: (identifier) @font-lock-function-name-face)
+
+     (formal_parameter (identifier) @font-lock-variable-name-face)
+     (named_argument (label (identifier) @font-lock-variable-name-face))
+     (initialized_identifier (identifier) @font-lock-variable-name-face)
+     (initializer_list_entry
+      (field_initializer
+       :anchor (identifier) @font-lock-variable-name-face))
+     (initialized_variable_definition
       name: (identifier) @font-lock-variable-name-face)
-     (typed_identifier (identifier) @font-lock-variable-name-face)
+
+     (typed_identifier (identifier) @font-lock-property-name-face)
 
      (for_loop_parts
       name: (identifier) @font-lock-variable-name-face)
      (catch_parameters
       [(identifier)] @font-lock-variable-name-face)
-     (switch_statement_case
-      (identifier) @font-lock-variable-name-face)
+     (static_final_declaration (identifier) @font-lock-variable-name-face)
+     (import_specification (identifier) @font-lock-type-face)
+     (combinator (identifier) @font-lock-variable-use-face)
 
      (record_literal
       (label (identifier) @font-lock-property-name-face))
@@ -300,56 +314,39 @@ definition names.")
      (constant_pattern
       (identifier) @font-lock-variable-name-face)
      (variable_pattern
-      (identifier) @font-lock-variable-name-face)
+      (identifier) @font-lock-variable-name-face))
 
-     (combinator
-      (identifier) @font-lock-variable-use-face)
-     (import_specification
-      (identifier) @font-lock-variable-use-face)
-     (static_final_declaration
-      (identifier) @font-lock-variable-name-face)
+   :language 'dart
+   :feature 'builtin
+   `(((identifier) @font-lock-builtin-face
+      (:match ,(rx-to-string
+                `(seq bol (or ,@dart-ts-mode--builtins) eol))
+              @font-lock-builtin-face))
 
-     (initializer_list_entry
-      (field_initializer
-       :anchor (identifier) @font-lock-variable-name-face))
-     (initialized_identifier
-      (identifier) @font-lock-variable-name-face)
-     (initialized_variable_definition
-      name: (identifier) @font-lock-variable-name-face)
+     [(assert_builtin)] @font-lock-warning-face
 
-     (constant_constructor_signature
-      (identifier) @font-lock-function-name-face)
-     (constructor_signature
-      name: (identifier) @font-lock-function-name-face)
-     (function_signature
-      name: (identifier) @font-lock-function-name-face)
-
-     (redirecting_factory_constructor_signature
-      (identifier) @font-lock-function-name-face)
-     (factory_constructor_signature
-      (identifier) @font-lock-function-name-face)
-
-     (getter_signature
-      name: (identifier) @font-lock-function-name-face)
-     (setter_signature
-      name: (identifier) @font-lock-function-name-face)
-     (named_argument
-      (label (identifier) @font-lock-variable-name-face)))
+     (expression_statement
+      ((identifier) @font-lock-builtin-face
+       (:match ,(rx bol "print" eol) @font-lock-builtin-face))
+      (selector)))
 
    :language 'dart
    :feature 'type
-   '((type_identifier) @font-lock-type-face
+   '([(type_identifier) (void_type) (function_type) "Function"]
+     @font-lock-type-face
+
+     (type_alias (type_identifier) @font-lock-type-face)
+
      ((identifier) @font-lock-type-face
       (:match "\\`_?[A-Z]" @font-lock-type-face))
-     [(inferred_type) (void_type) (nullable_type) (function_type)]
-     @font-lock-type-face
 
      (enum_declaration
       name: (identifier) @font-lock-type-face)
+     (enum_constant
+      name: (identifier) @font-lock-type-face)
+
      (scoped_identifier
       scope: (identifier) @font-lock-type-face)
-     (type_alias
-      (type_identifier) @font-lock-type-face)
      ((scoped_identifier
        scope: (identifier) @font-lock-type-face
        name: (identifier) @font-lock-type-face)
@@ -395,6 +392,7 @@ definition names.")
       (increment_operator)              ; ++ --
       (logical_and_operator)            ; &&
       (logical_or_operator)             ; ||
+      (nullable_type)                   ; <type>?
       ]
      @font-lock-operator-face
      (selector "!" @font-lock-operator-face))
@@ -417,13 +415,11 @@ definition names.")
    :feature 'property
    `((set_or_map_literal
       (pair key: (identifier) @font-lock-property-name-face))
-     (cascade_selector
-      (identifier) @font-lock-property-name-face)
-     (conditional_assignable_selector
-      (identifier) @font-lock-property-use-face)
-     (qualified
-      (identifier) @font-lock-property-name-face)
+     (cascade_selector (identifier) @font-lock-property-name-face)
+     (qualified (identifier) @font-lock-property-name-face)
      (unconditional_assignable_selector
+      (identifier) @font-lock-property-use-face)
+     (conditional_assignable_selector
       (identifier) @font-lock-property-use-face))
 
    :language 'dart
@@ -436,18 +432,13 @@ definition names.")
    ;; after other rules and override with `keep' to allow font-locking
    ;; template_substitution
    :override 'keep
-   '((string_literal ["r'''" "r'" "r\"" "r\"\"\""]) @font-lock-regexp-face
-     (string_literal ["\"" "'" "'''"]) @font-lock-string-face
+   '((string_literal) @font-lock-string-face
      (dotted_identifier_list) @font-lock-string-face)
 
    :language 'dart
    :feature 'escape-sequence
    :override t
-   '((string_literal
-      "r'''" @font-lock-regexp-face
-      _ :* @font-lock-regexp-face
-      "'''" @font-lock-regexp-face)
-     (escape_sequence) @font-lock-escape-face
+   '((escape_sequence) @font-lock-escape-face
      (template_substitution ["$" "{" "}"] @font-lock-misc-punctuation-face)
      (identifier_dollar_escaped) @font-lock-variable-name-face)
 

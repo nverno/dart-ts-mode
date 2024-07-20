@@ -1,5 +1,5 @@
 void record() {
-  var (i as int, String s) = record; 
+  var (i as int, String s) = record;
 }
 
 void main(){
